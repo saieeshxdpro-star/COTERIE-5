@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coterie - Class 1-A Elite Lounge</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Playfair Display (Serif) & Plus Jakarta Sans (Sans-Serif) -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase Compat SDKs (Safe for local file:// downloads) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Luxury Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090909;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #232220;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #dfc290;
+    }
+    /* Elegant Micro-Animations */
+    @keyframes premiumFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-premium-in {
+      animation: premiumFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="bg-[#09090b] text-[#e7e6e4] font-sans min-h-full flex flex-col selection:bg-[#dfc290] selection:text-black">
+
+  <!-- ================= TOAST NOTIFICATION CONTAINER ================= -->
+  <div id="toast" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-[#161513] text-[#dfc290] px-8 py-3.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.5)] font-semibold flex items-center gap-3 border border-[#dfc290]/20 transition-all duration-300 transform">
+    <span class="w-1.5 h-1.5 rounded-full bg-[#dfc290]"></span>
+    <span id="toast-text" class="tracking-wide text-xs uppercase font-bold">Success</span>
+  </div>
+
+  <!-- ================= LUXURY APP HEADER ================= -->
+  <header class="sticky top-0 z-40 bg-[#0c0c0e]/90 backdrop-blur-md border-b border-[#1c1b1e] px-6 py-4 md:px-12 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="p-3 bg-gradient-to-tr from-[#151a2e] to-[#252b47] rounded-2xl border border-[#dfc290]/20 shadow-2xl">
+        <!-- UA / Crest Styled Icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#dfc290]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9s2.015-9 4.5-9m0 0a9.015 9.015 0 010 18.03" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-2xl font-serif tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-[#f3f0ea] to-[#dfc290]">COTERIE • UA</h1>
+        <p class="text-[10px] text-slate-400 font-semibold tracking-widest uppercase flex items-center gap-1.5 mt-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#dfc290]"></span>
+          Class 1-A Elite Suite • Plus Ultra
+        </p>
+      </div>
+    </div>
+
+    <!-- Active User Selector -->
+    <div class="flex items-center gap-3 bg-[#131215] border border-[#212025] p-1.5 rounded-full shadow-inner">
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-4">Active Hero:</span>
+      <select id="userSelector" class="bg-[#1c1b21] text-[#dfc290] text-xs font-bold rounded-full py-1.5 px-4 border border-[#dfc290]/20 focus:ring-1 focus:ring-[#dfc290] transition cursor-pointer hover:bg-[#26242c]">
+        <!-- Dynamically Populated -->
+      </select>
+    </div>
+  </header>
+
+  <!-- ================= LAYOUT CONTAINER ================= -->
+  <div class="flex-1 flex flex-col md:flex-row max-w-7xl w-full mx-auto p-4 md:p-8 gap-8">
+    
+    <!-- ================= SIDEBAR NAV & MEMBERS ================= -->
+    <aside class="w-full md:w-72 shrink-0 flex flex-col gap-5">
+      
+      <!-- Squad Directory -->
+      <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 flex flex-col gap-4">
+        <h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          ✨ The UA Circle (<span id="memberCount">0</span>)
+        </h2>
+        
+        <div id="membersList" class="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
+          <div class="text-xs text-slate-500 text-center py-4">Assembling the agency...</div>
+        </div>
+
+        <!-- Add Member Input -->
+        <form id="addMemberForm" class="mt-2 pt-4 border-t border-[#1c1b21] flex gap-2">
+          <input 
+            id="newMemberName"
+            type="text" 
+            placeholder="Register Hero..." 
+            maxlength="12"
+            required
+            class="flex-1 bg-[#09090b] border border-[#1e1d21] rounded-xl text-xs px-3.5 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290]/50"
+          />
+          <button 
+            type="submit" 
+            class="bg-[#dfc290] hover:bg-[#ebd6b4] text-black rounded-xl px-3.5 transition flex items-center justify-center active:scale-95"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- Left Sidebar Navigation -->
+      <nav class="flex flex-row md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-[#dfc290] text-black shadow-lg shadow-[#dfc290]/10">
+          <span>📊 Dashboard</span>
+        </button>
+        <button onclick="switchTab('polls')" id="nav-polls" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-transparent hover:bg-[#111012] border border-transparent text-slate-400 hover:text-[#dfc290]">
+          <span>🗳️ The Decider</span>
+        </button>
+        <button onclick="switchTab('expenses')" id="nav-expenses" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-transparent hover:bg-[#111012] border border-transparent text-slate-400 hover:text-[#dfc290]">
+          <span>💸 SettleUp</span>
+        </button>
+        <button onclick="switchTab('jokes')" id="nav-jokes" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-transparent hover:bg-[#111012] border border-transparent text-slate-400 hover:text-[#dfc290]">
+          <span>😂 The Vault</span>
+        </button>
+        <button onclick="switchTab('game')" id="nav-game" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-transparent hover:bg-[#111012] border border-transparent text-slate-400 hover:text-[#dfc290]">
+          <span>⚡ Catalyst</span>
+        </button>
+        <button onclick="switchTab('goals')" id="nav-goals" class="nav-btn flex items-center gap-3.5 px-5 py-4 rounded-2xl text-xs uppercase tracking-wider font-bold transition whitespace-nowrap w-full justify-start bg-transparent hover:bg-[#111012] border border-transparent text-slate-400 hover:text-[#dfc290]">
+          <span>🎯 Goals</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ================= MAIN WORKSPACE ================= -->
+    <main class="flex-1 min-w-0">
+
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="tab-dashboard" class="tab-content animate-premium-in flex flex-col gap-6">
+        <div class="bg-gradient-to-r from-[#111528] via-[#1a1f38] to-[#0c0d14] border border-[#232946] rounded-[2rem] p-8 relative overflow-hidden shadow-2xl">
+          <div class="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-48 w-48 text-[#dfc290]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3" />
+            </svg>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-serif text-white tracking-wide leading-tight">Welcome to the Academy Suite. ✨</h2>
+          <p class="text-slate-400 text-sm mt-2 max-w-xl font-light">
+            Welcome, Class 1-A hero. Seamlessly manage team training budgets, inside agency jokes, group goals, and vote on future team operations.
+          </p>
+          <div class="flex flex-wrap gap-4 mt-8">
+            <div class="bg-[#09090b]/80 rounded-2xl p-5 border border-[#1e1d21] min-w-[140px] shadow-lg">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Agency Expenses</span>
+              <p id="dashboardExpenses" class="text-xl font-bold text-[#dfc290] mt-1.5 font-serif">$0.00</p>
+            </div>
+            <div class="bg-[#09090b]/80 rounded-2xl p-5 border border-[#1e1d21] min-w-[140px] shadow-lg">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Locker Room Jokes</span>
+              <p id="dashboardJokes" class="text-xl font-bold text-amber-100 mt-1.5 font-serif">0</p>
+            </div>
+            <div class="bg-[#09090b]/80 rounded-2xl p-5 border border-[#1e1d21] min-w-[140px] shadow-lg">
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Smashed Goals</span>
+              <p id="dashboardGoals" class="text-xl font-bold text-emerald-400 mt-1.5 font-serif">0/0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured Dashboard Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 flex flex-col justify-between shadow-xl">
+            <div>
+              <span class="text-[10px] font-bold text-[#dfc290] uppercase tracking-widest block mb-3">Featured Decision</span>
+              <div id="featuredPollArea">
+                <p class="text-slate-500 text-sm italic">Pondering active inquiries...</p>
+              </div>
+            </div>
+            <button onclick="switchTab('polls')" class="mt-6 w-full bg-[#1c1b21] hover:bg-[#26242c] text-[#dfc290] border border-[#dfc290]/15 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition">
+              Go to The Decider 🗳️
+            </button>
+          </div>
+
+          <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 flex flex-col justify-between shadow-xl">
+            <div>
+              <span class="text-[10px] font-bold text-[#dfc290] uppercase tracking-widest block mb-3">SettleUp Plan</span>
+              <div id="featuredSettleUpArea" class="flex flex-col gap-2 max-h-40 overflow-y-auto">
+                <p class="text-slate-500 text-sm italic">Resolving pending balances...</p>
+              </div>
+            </div>
+            <button onclick="switchTab('expenses')" class="mt-6 w-full bg-[#1c1b21] hover:bg-[#26242c] text-[#dfc290] border border-[#dfc290]/15 font-bold py-3 px-4 rounded-xl text-xs uppercase tracking-wider transition">
+              Settle Agency Ledger 💸
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. THE DECIDER (POLLS) -->
+      <section id="tab-polls" class="tab-content hidden animate-premium-in flex flex-col gap-6">
+        <div>
+          <h2 class="text-2xl font-serif text-white tracking-wide">The Decider 🗳️</h2>
+          <p class="text-slate-400 text-sm font-light">UA decisions made easy. Vote in real-time on training camps, lunch orders, or tournament strategies.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Create Poll Form -->
+          <div class="lg:col-span-1 bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 h-fit shadow-xl">
+            <h3 class="font-serif text-[#dfc290] text-lg mb-4">Establish Inquest</h3>
+            <form id="createPollForm" class="flex flex-col gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Question</label>
+                <input id="pollQuestion" type="text" placeholder="Where should we train this weekend?" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm" />
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Proposed Solutions</label>
+                <div id="pollOptionsContainer" class="flex flex-col gap-2">
+                  <input type="text" placeholder="Solution 1" required class="poll-opt-input w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-xs" />
+                  <input type="text" placeholder="Solution 2" required class="poll-opt-input w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-xs" />
+                </div>
+                <button type="button" onclick="addPollOptionField()" class="text-[#dfc290]/80 hover:text-[#dfc290] text-xs font-bold mt-2 flex items-center gap-1">
+                  ➕ Add Choice
+                </button>
+              </div>
+              <button type="submit" class="w-full bg-[#dfc290] hover:bg-[#ebd6b4] text-black font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition mt-2">
+                Launch Poll
+              </button>
+            </form>
+          </div>
+
+          <!-- Polls List -->
+          <div class="lg:col-span-2 flex flex-col gap-4" id="pollsListArea">
+            <p class="text-slate-500 text-sm italic">Fetching active polls...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. SETTLEUP (EXPENSE SPLITTER) -->
+      <section id="tab-expenses" class="tab-content hidden animate-premium-in flex flex-col gap-6">
+        <div>
+          <h2 class="text-2xl font-serif text-white tracking-wide">SettleUp Splitter 💸</h2>
+          <p class="text-slate-400 text-sm font-light">Divide costs of training snacks, costume repairs, or equipment upgrades cleanly.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Log Expense Form -->
+          <div class="lg:col-span-1 bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 h-fit shadow-xl">
+            <h3 class="font-serif text-[#dfc290] text-lg mb-4">Log Transaction</h3>
+            <form id="expenseForm" class="flex flex-col gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Description</label>
+                <input id="expDesc" type="text" placeholder="e.g. Hero equipment upgrade, Training gym rent" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Amount ($)</label>
+                  <input id="expAmount" type="number" step="0.01" min="0.01" placeholder="0.00" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm" />
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Paid By</label>
+                  <select id="expPaidBy" class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm cursor-pointer">
+                    <!-- Loaded dynamically -->
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Split With</label>
+                <div id="expenseSplitGroup" class="flex flex-col gap-2 max-h-32 overflow-y-auto bg-[#09090b] rounded-xl p-3 border border-[#1e1d21]">
+                  <!-- Loaded dynamically -->
+                </div>
+              </div>
+              <button type="submit" class="w-full bg-[#dfc290] hover:bg-[#ebd6b4] text-black font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition shadow-lg">
+                Log Ledger Expense
+              </button>
+            </form>
+          </div>
+
+          <!-- Debt Summary & Past Expenses -->
+          <div class="lg:col-span-2 flex flex-col gap-6">
+            <!-- Debt plan -->
+            <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 shadow-xl">
+              <h3 class="font-serif text-[#dfc290] text-lg mb-3">Optimal Settlement Plan 💸</h3>
+              <div id="debtPlanArea" class="flex flex-col gap-2">
+                <p class="text-slate-500 text-sm italic">Summing balances...</p>
+              </div>
+            </div>
+
+            <!-- List -->
+            <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 shadow-xl">
+              <h3 class="font-serif text-[#dfc290] text-lg mb-4">Past Group Expenses</h3>
+              <div id="expensesListArea" class="flex flex-col gap-3.5 max-h-96 overflow-y-auto pr-1">
+                <p class="text-slate-500 text-sm italic">Loading shared ledger...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. THE VAULT (INSIDE JOKES & QUOTES) -->
+      <section id="tab-jokes" class="tab-content hidden animate-premium-in flex flex-col gap-6">
+        <div>
+          <h2 class="text-2xl font-serif text-white tracking-wide">The Vault: Inside Jokes 😂</h2>
+          <p class="text-slate-400 text-sm font-light">Immortalize legendary remarks, class rivalries, and training-camp memories from UA Class 1-A.</p>
+        </div>
+
+        <div class="bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 shadow-xl">
+          <h3 class="font-serif text-[#dfc290] text-lg mb-4">Preserve a Milestone Quote</h3>
+          <form id="addJokeForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Quote / Inside Joke</label>
+              <input id="jokeText" type="text" placeholder="“I am here! ...To grab some midnight snacks.”" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Event or Context</label>
+              <input id="jokeContext" type="text" placeholder="e.g. Dorm contest, training grounds" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm" />
+            </div>
+            <div class="md:col-span-3 flex justify-end">
+              <button type="submit" class="bg-[#dfc290] hover:bg-[#ebd6b4] text-black font-bold py-3.5 px-6 rounded-xl text-xs uppercase tracking-widest transition shadow-lg">
+                Deposit to Vault 🎙️
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Quote Grid -->
+        <div id="jokesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <p class="text-slate-500 text-sm italic col-span-2">Retrieving squad quotes...</p>
+        </div>
+      </section>
+
+      <!-- 5. CATALYST (PARTY GAME) -->
+      <section id="tab-game" class="tab-content hidden animate-premium-in flex flex-col gap-6 items-center">
+        <div class="text-center w-full max-w-lg">
+          <h2 class="text-2xl font-serif text-white tracking-wide">The Catalyst ⚡</h2>
+          <p class="text-slate-400 text-sm mt-1 font-light">Break the ice during dorm nights. Play UA-themed Truth or Dare with the class!</p>
+        </div>
+
+        <div class="w-full max-w-lg bg-gradient-to-br from-[#121422] to-[#1c1a18] border border-[#dfc290]/20 rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-2xl relative">
+          <div id="partyGameTag" class="text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-full mb-6 bg-[#232128] text-[#dfc290] border border-[#dfc290]/10">
+            Dorm Icebreaker
+          </div>
+
+          <p id="partyGameContent" class="text-xl md:text-2xl font-serif italic text-white min-h-[140px] flex items-center justify-center leading-relaxed">
+            Choose a challenge below to ignite the gathering!
+          </p>
+
+          <div class="grid grid-cols-2 gap-4 w-full mt-8">
+            <button onclick="triggerPartyGame('truth')" class="bg-[#1c1a18] border border-[#dfc290]/30 hover:border-[#dfc290] hover:bg-[#282522] text-[#dfc290] font-bold py-4 rounded-2xl transition duration-150 active:scale-95 text-xs uppercase tracking-widest shadow-xl">
+              Truth 🤔
+            </button>
+            <button onclick="triggerPartyGame('dare')" class="bg-[#dfc290] hover:bg-[#ebd6b4] text-black font-bold py-4 rounded-2xl transition duration-150 active:scale-95 text-xs uppercase tracking-widest shadow-xl">
+              Dare 🔥
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. SQUAD GOALS -->
+      <section id="tab-goals" class="tab-content hidden animate-premium-in flex flex-col gap-6">
+        <div>
+          <h2 class="text-2xl font-serif text-white tracking-wide">Squad Goals 🎯</h2>
+          <p class="text-slate-400 text-sm font-light font-sans">Class 1-A's collective achievements. Hit your benchmarks, master your quirks, and cross milestones together!</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Add Goal -->
+          <div class="lg:col-span-1 bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 h-fit shadow-xl">
+            <h3 class="font-serif text-[#dfc290] text-lg mb-4">Add Ambition</h3>
+            <form id="goalForm" class="flex flex-col gap-4">
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Action Milestone</label>
+                <input id="goalText" type="text" placeholder="e.g. Master 45% Quirk control, win joint battle" required class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290]" />
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1.5">Category</label>
+                <select id="goalCategory" class="w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-sm cursor-pointer">
+                  <option value="Fun">Fun 🎉</option>
+                  <option value="Travel">Travel ✈️</option>
+                  <option value="Music">Music 🎵</option>
+                  <option value="Achievement">Achievement 🏆</option>
+                </select>
+              </div>
+              <button type="submit" class="w-full bg-[#dfc290] hover:bg-[#ebd6b4] text-black font-bold py-3.5 px-4 rounded-xl text-xs uppercase tracking-widest transition">
+                Pin Squad Goal
+              </button>
+            </form>
+          </div>
+
+          <!-- Goal List -->
+          <div class="lg:col-span-2 bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 shadow-xl">
+            <h3 class="font-serif text-[#dfc290] text-lg mb-4">The Squad Bucket List</h3>
+            <div id="goalsListArea" class="flex flex-col gap-2.5">
+              <p class="text-slate-500 text-sm italic">Loading goals...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="mt-auto py-6 border-t border-[#131215] text-center text-xs text-slate-500 tracking-wide font-light">
+    <p>© 2026 Coterie UA Suites. Perfectly integrated, infinitely collaborative.</p>
+  </footer>
+
+  <!-- ================= MASTER APPLICATION SCRIPTS ================= -->
+  <script>
+    // --- STATE ENGINE WITH OFFLINE-FIRST MEMORY ---
+    let members = ["Deku", "Bakugo", "Todoroki", "Uraraka", "Iida", "Momo"];
+    let currentUser = "Deku";
+    let loadedPolls = [
+      {
+        id: "poll-1",
+        question: "Where should Class 1-A host their next weekend training camp?",
+        options: [
+          { id: "opt-1", text: "Training Ground Beta 💥", votes: ["Deku", "Iida"] },
+          { id: "opt-2", text: "Forest Training Camp 🌲", votes: ["Bakugo", "Todoroki"] },
+          { id: "opt-3", text: "Unforeseen Simulation Joint (USJ) 🌊", votes: ["Uraraka", "Momo"] }
+        ],
+        creator: "Deku",
+        created: Date.now()
+      }
+    ];
+    let loadedExpenses = [
+      { id: "exp-1", description: "Dorm energy drinks & snacks", amount: 48.00, paidBy: "Momo", splitWith: ["Deku", "Bakugo", "Todoroki", "Uraraka", "Iida", "Momo"], date: "2026-07-04" },
+      { id: "exp-2", description: "Special Cold Soba Treat", amount: 120.00, paidBy: "Todoroki", splitWith: ["Deku", "Todoroki", "Iida"], date: "2026-07-03" }
+    ];
+    let loadedJokes = [
+      { id: "joke-1", text: "“I am here! ...To grab some midnight snacks.”", context: "All Might walking into the Class 1-A dorm kitchen at 2 AM.", author: "Deku", likes: 15, date: "2026-06-25" },
+      { id: "joke-2", text: "“Move aside, Deku, or I'll blast this homework into orbit!”", context: "Bakugo trying to study in the common room.", author: "Kaminari", likes: 22, date: "2026-06-28" }
+    ];
+    let loadedGoals = [
+      { id: "goal-1", text: "Achieve 45% Quirk control", category: "Achievement", completed: false },
+      { id: "goal-2", text: "Host a joint dorm movie marathon night", category: "Fun", completed: true },
+      { id: "goal-3", text: "Survive Aizawa-Sensei's surprise pop-quiz", category: "Achievement", completed: false }
+    ];
+
+    // Ensure state merges or loads from Local Cache immediately
+    function loadLocalCache() {
+      const cachedMembers = localStorage.getItem("coterie_members");
+      if (cachedMembers) members = JSON.parse(cachedMembers);
+
+      const cachedUser = localStorage.getItem("coterie_current_user");
+      if (cachedUser) currentUser = cachedUser;
+
+      const cachedPolls = localStorage.getItem("coterie_polls");
+      if (cachedPolls) loadedPolls = JSON.parse(cachedPolls);
+
+      const cachedExpenses = localStorage.getItem("coterie_expenses");
+      if (cachedExpenses) loadedExpenses = JSON.parse(cachedExpenses);
+
+      const cachedJokes = localStorage.getItem("coterie_jokes");
+      if (cachedJokes) loadedJokes = JSON.parse(cachedJokes);
+
+      const cachedGoals = localStorage.getItem("coterie_goals");
+      if (cachedGoals) loadedGoals = JSON.parse(cachedGoals);
+    }
+
+    // Save state locally
+    function saveLocalCache() {
+      localStorage.setItem("coterie_members", JSON.stringify(members));
+      localStorage.setItem("coterie_current_user", currentUser);
+      localStorage.setItem("coterie_polls", JSON.stringify(loadedPolls));
+      localStorage.setItem("coterie_expenses", JSON.stringify(loadedExpenses));
+      localStorage.setItem("coterie_jokes", JSON.stringify(loadedJokes));
+      localStorage.setItem("coterie_goals", JSON.stringify(loadedGoals));
+    }
+
+    // --- APP TAB MANAGER ---
+    window.switchTab = function(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-[#dfc290]', 'text-black', 'shadow-lg', 'shadow-[#dfc290]/10');
+        btn.classList.add('bg-transparent', 'text-slate-400', 'hover:text-[#dfc290]');
+      });
+
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-transparent', 'text-slate-400', 'hover:text-[#dfc290]');
+        activeBtn.classList.add('bg-[#dfc290]', 'text-black', 'shadow-lg', 'shadow-[#dfc290]/10');
+      }
+    };
+
+    // --- SAFE, HIGH-QUALITY MHA THEMED TRUTH OR DARE DATASETS ---
+    const PARTY_GAMES = {
+      truths: [
+        "If you could temporarily copy any classmate's Quirk for 24 hours, whose would you choose?",
+        "What is your absolute favorite hero training-camp memory so far?",
+        "Who in Class 1-A has the most creative or fashionable casual outfit style?",
+        "If you could form a hero agency with any two classmates, who would they be?",
+        "What is a silly or funny hero alias you secretly thought of but rejected?",
+        "Which hero classmate are you most inspired by when training gets tough?"
+      ],
+      dares: [
+        "Deliver a 30-second speech on why hero safety rules are important, complete with dramatic arm chops like Tenya Iida!",
+        "Deliver All Might's legendary signature laugh ('HA HA HA!') with maximum hero energy!",
+        "Stand completely balanced on one leg for 20 seconds as if floating in zero gravity like Uraraka!",
+        "Act out your signature hero Quirk move in silence until the class guesses what it is!",
+        "Proudly recite the UA High motto, 'Plus Ultra!', with your most noble posture and determination!",
+        "Explain your ultimate backup plan in case a giant training robot suddenly appeared outside the dorms."
+      ]
+    };
+
+    window.triggerPartyGame = function(type) {
+      const arr = type === 'truth' ? PARTY_GAMES.truths : PARTY_GAMES.dares;
+      const index = Math.floor(Math.random() * arr.length);
+      const output = arr[index];
+      
+      const tag = document.getElementById('partyGameTag');
+      tag.textContent = type;
+      if (type === 'truth') {
+        tag.className = "text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-full mb-6 bg-sky-500/10 text-sky-300 border border-sky-500/20 animate-pulse";
+      } else {
+        tag.className = "text-[10px] uppercase font-bold tracking-widest px-4 py-1.5 rounded-full mb-6 bg-[#dfc290]/10 text-[#dfc290] border border-[#dfc290]/20 animate-pulse";
+      }
+      
+      document.getElementById('partyGameContent').textContent = `"${output}"`;
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    window.showToast = function(message) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.textContent = message;
+      toast.classList.remove('hidden', 'opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+
+    // --- MASTER RENDER REFRESH ---
+    function renderAllUI() {
+      renderMembersUI();
+      renderPollsUI();
+      renderExpensesUI();
+      renderJokesUI();
+      renderGoalsUI();
+    }
+
+    // --- RENDER DOM CONTROLLERS ---
+
+    // Members Rendering Engine
+    function renderMembersUI() {
+      const listEl = document.getElementById('membersList');
+      const selectorEl = document.getElementById('userSelector');
+      const expPaidByEl = document.getElementById('expPaidBy');
+      const countEl = document.getElementById('memberCount');
+
+      if (!listEl || !selectorEl || !expPaidByEl || !countEl) return;
+
+      countEl.textContent = members.length;
+
+      const savedUser = currentUser;
+      selectorEl.innerHTML = '';
+      expPaidByEl.innerHTML = '';
+      
+      members.forEach(m => {
+        const opt1 = document.createElement('option');
+        opt1.value = m;
+        opt1.textContent = m;
+        if (m === savedUser) opt1.selected = true;
+        selectorEl.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = m;
+        opt2.textContent = m;
+        expPaidByEl.appendChild(opt2);
+      });
+
+      // Render Split Group checkboxes inside Expenses Creator
+      const splitGroupEl = document.getElementById('expenseSplitGroup');
+      if (splitGroupEl) {
+        splitGroupEl.innerHTML = '';
+        members.forEach(m => {
+          const label = document.createElement('label');
+          label.className = "flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer font-semibold select-none";
+          
+          const input = document.createElement('input');
+          input.type = "checkbox";
+          input.value = m;
+          input.checked = true;
+          input.className = "rounded border-slate-700 bg-[#09090b] text-[#dfc290] focus:ring-[#dfc290]";
+          
+          const span = document.createElement('span');
+          span.textContent = m;
+          
+          label.appendChild(input);
+          label.appendChild(span);
+          splitGroupEl.appendChild(label);
+        });
+      }
+
+      // Populate list elements
+      listEl.innerHTML = '';
+      members.forEach(m => {
+        const item = document.createElement('div');
+        const isActiveUser = m === currentUser;
+        item.className = `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide transition ${
+          isActiveUser 
+            ? 'bg-[#dfc290]/10 border border-[#dfc290]/20 text-[#dfc290]' 
+            : 'bg-[#18171a] text-slate-300 border border-transparent'
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-6 h-6 rounded-full bg-[#2a292d] text-[#dfc290] flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
+              ${m[0]}
+            </div>
+            <span class="truncate" id="memberNameSpan-${m}">${m}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 ml-1">
+            ${isActiveUser ? `<span class="text-[9px] uppercase font-bold bg-[#dfc290] text-black px-1.5 py-0.5 rounded-full">You</span>` : ''}
+            <button onclick="editMemberName('${m}')" class="text-slate-400 hover:text-[#dfc290] transition p-0.5" title="Rename Member">
+              ✏️
+            </button>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    // --- MEMBER RENAME UTILITIES ---
+    window.editMemberName = function(name) {
+      const span = document.getElementById(`memberNameSpan-${name}`);
+      if (!span) return;
+      if (span.querySelector('input')) return;
+
+      const currentText = span.textContent;
+      span.innerHTML = `
+        <div class="flex items-center gap-1">
+          <input type="text" id="editInput-${name}" value="${currentText}" class="bg-[#09090b] border border-[#dfc290] rounded px-2 py-0.5 text-xs text-white w-24 focus:outline-none" maxlength="12" />
+          <button onclick="saveMemberName(event, '${name}')" class="text-[#dfc290] hover:text-white font-bold text-xs px-1" title="Save">✓</button>
+          <button onclick="cancelEditMemberName(event, '${name}', '${currentText}')" class="text-rose-400 hover:text-rose-300 font-bold text-xs px-1" title="Cancel">✗</button>
+        </div>
+      `;
+      
+      const input = document.getElementById(`editInput-${name}`);
+      if (input) {
+        input.focus();
+        input.select();
+        input.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            saveMemberName(e, name);
+          } else if (e.key === 'Escape') {
+            cancelEditMemberName(e, name, currentText);
+          }
+        });
+      }
+    };
+
+    window.cancelEditMemberName = function(e, name, originalText) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      const span = document.getElementById(`memberNameSpan-${name}`);
+      if (span) {
+        span.textContent = originalText;
+      }
+    };
+
+    window.saveMemberName = async function(e, oldName) {
+      if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+      const input = document.getElementById(`editInput-${oldName}`);
+      if (!input) return;
+      
+      const newName = input.value.trim();
+      if (!newName) {
+        showToast("Name cannot be empty!");
+        return;
+      }
+      
+      if (newName === oldName) {
+        cancelEditMemberName(null, oldName, oldName);
+        return;
+      }
+      
+      if (members.map(m => m.toLowerCase()).includes(newName.toLowerCase())) {
+        showToast("That member name already exists!");
+        return;
+      }
+
+      // 1. Update Offline Cache immediately
+      members = members.map(m => m === oldName ? newName : m);
+      if (currentUser === oldName) {
+        currentUser = newName;
+      }
+
+      // Propagate renaming update cleanly across current local data structures
+      loadedPolls.forEach(poll => {
+        if (poll.creator === oldName) poll.creator = newName;
+        poll.options.forEach(opt => {
+          if (Array.isArray(opt.votes)) {
+            opt.votes = opt.votes.map(v => v === oldName ? newName : v);
+          }
+        });
+      });
+
+      loadedExpenses.forEach(exp => {
+        if (exp.paidBy === oldName) exp.paidBy = newName;
+        if (Array.isArray(exp.splitWith)) {
+          exp.splitWith = exp.splitWith.map(s => s === oldName ? newName : s);
+        }
+      });
+
+      loadedJokes.forEach(joke => {
+        if (joke.author === oldName) joke.author = newName;
+      });
+
+      saveLocalCache();
+      renderAllUI();
+      showToast(`Renamed "${oldName}" to "${newName}"!`);
+
+      // 2. Sync cleanly in the background with Firestore
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getCollectionRef('members').doc(newName).set({ name: newName });
+          await getCollectionRef('members').doc(oldName).delete();
+        }
+      } catch (err) {}
+    };
+
+    // --- POLLS TAB CONTROLLER ---
+    window.addPollOptionField = function() {
+      const container = document.getElementById('pollOptionsContainer');
+      const input = document.createElement('input');
+      input.type = "text";
+      input.placeholder = `Solution ${container.children.length + 1}`;
+      input.className = "poll-opt-input w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-xs";
+      container.appendChild(input);
+    }
+
+    function renderPollsUI() {
+      const area = document.getElementById('pollsListArea');
+      const featuredArea = document.getElementById('featuredPollArea');
+
+      if (!area || !featuredArea) return;
+
+      if (loadedPolls.length === 0) {
+        area.innerHTML = `
+          <div class="bg-[#111012] border border-dashed border-[#1e1d21] rounded-[2rem] p-12 text-center">
+            <p class="text-slate-400 text-sm font-light">No operational polls active. Pitch a decision to Class 1-A!</p>
+          </div>
+        `;
+        featuredArea.innerHTML = `<p class="text-slate-500 text-sm italic">All decisions finalized.</p>`;
+        return;
+      }
+
+      area.innerHTML = '';
+      loadedPolls.forEach(poll => {
+        let totalVotes = 0;
+        poll.options.forEach(o => { totalVotes += (o.votes ? o.votes.length : 0); });
+
+        const card = document.createElement('div');
+        card.className = "bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 flex flex-col gap-4 shadow-lg";
+        
+        let optionsMarkup = '';
+        poll.options.forEach(o => {
+          const hasVoted = Array.isArray(o.votes) && o.votes.includes(currentUser);
+          const percent = totalVotes > 0 ? Math.round(((o.votes ? o.votes.length : 0) / totalVotes) * 100) : 0;
+          const voteBadges = (o.votes || []).map(v => `<span class="text-[9px] bg-[#1e1c1e] text-[#dfc290] font-bold px-2 py-0.5 rounded uppercase tracking-wider">${v}</span>`).join(' ');
+
+          optionsMarkup += `
+            <button onclick="votePoll('${poll.id}', '${o.id}')" class="w-full text-left relative overflow-hidden rounded-2xl border p-4 transition duration-200 active:scale-98 ${hasVoted ? 'border-[#dfc290]/40 bg-[#dfc290]/5' : 'border-[#1c1b21] bg-[#09090b] hover:bg-[#111012]' }">
+              <div class="absolute top-0 left-0 bottom-0 bg-[#dfc290]/10 rounded-l-2xl transition-all" style="width: ${percent}%"></div>
+              <div class="relative flex items-center justify-between text-xs tracking-wide">
+                <div class="flex items-center gap-3">
+                  <div class="w-4 h-4 rounded-full border flex items-center justify-center ${hasVoted ? 'border-[#dfc290] bg-[#dfc290]' : 'border-slate-700'}">
+                    ${hasVoted ? '<div class="w-1.5 h-1.5 rounded-full bg-black"></div>' : ''}
+                  </div>
+                  <span class="font-semibold text-slate-200">${o.text}</span>
+                </div>
+                <span class="font-bold text-[#dfc290]">${o.votes ? o.votes.length : 0} votes (${percent}%)</span>
+              </div>
+              ${voteBadges ? `<div class="relative mt-2 flex flex-wrap items-center gap-1.5 pl-7">${voteBadges}</div>` : ''}
+            </button>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-slate-500">Inquiry by <strong class="text-slate-300 font-semibold">${poll.creator}</strong></span>
+            <button onclick="deletePoll('${poll.id}')" class="text-slate-500 hover:text-rose-400 transition" title="Dismiss">
+              🗑️
+            </button>
+          </div>
+          <h3 class="text-base font-serif font-bold text-white leading-tight">${poll.question}</h3>
+          <div class="flex flex-col gap-3">${optionsMarkup}</div>
+        `;
+        area.appendChild(card);
+      });
+
+      const featuredPoll = loadedPolls[0];
+      let totalFeaturedVotes = 0;
+      featuredPoll.options.forEach(o => { totalFeaturedVotes += (o.votes ? o.votes.length : 0); });
+
+      let fMarkup = `<h3 class="font-serif text-base text-white mb-4">${featuredPoll.question}</h3><div class="flex flex-col gap-2.5">`;
+      featuredPoll.options.slice(0, 3).forEach(o => {
+        const pct = totalFeaturedVotes > 0 ? Math.round(((o.votes ? o.votes.length : 0) / totalFeaturedVotes) * 100) : 0;
+        fMarkup += `
+          <div class="relative overflow-hidden bg-[#09090b] rounded-xl p-3.5 border border-[#1e1d21]">
+            <div class="absolute top-0 left-0 bottom-0 bg-[#dfc290]/5" style="width: ${pct}%"></div>
+            <div class="relative flex justify-between text-xs font-semibold">
+              <span class="text-slate-300">${o.text}</span>
+              <span class="text-[#dfc290]">${o.votes ? o.votes.length : 0} (${pct}%)</span>
+            </div>
+          </div>
+        `;
+      });
+      fMarkup += '</div>';
+      featuredArea.innerHTML = fMarkup;
+    }
+
+
+    // --- EXPENSES SPLITTER (SETTLEUP) CONTROLLER ---
+    function computeOptimalDebts() {
+      const balances = {};
+      members.forEach(m => { balances[m] = 0; });
+
+      loadedExpenses.forEach(exp => {
+        const payer = exp.paidBy;
+        const totalPeople = Array.isArray(exp.splitWith) ? exp.splitWith.length : 0;
+        if (totalPeople === 0) return;
+
+        const share = exp.amount / totalPeople;
+        
+        if (balances[payer] !== undefined) {
+          balances[payer] += exp.amount;
+        }
+
+        exp.splitWith.forEach(person => {
+          if (balances[person] !== undefined) {
+            balances[person] -= share;
+          }
+        });
+      });
+
+      const creditors = [];
+      const debtors = [];
+      Object.keys(balances).forEach(name => {
+        const b = balances[name];
+        if (b > 0.01) creditors.push({ name, balance: b });
+        if (b < -0.01) debtors.push({ name, balance: Math.abs(b) });
+      });
+
+      creditors.sort((a,b) => b.balance - a.balance);
+      debtors.sort((a,b) => b.balance - a.balance);
+
+      const plan = [];
+      let c = 0, d = 0;
+
+      while (c < creditors.length && d < debtors.length) {
+        const creditor = creditors[c];
+        const debtor = debtors[d];
+
+        const settle = Math.min(creditor.balance, debtor.balance);
+        plan.push({
+          from: debtor.name,
+          to: creditor.name,
+          amount: parseFloat(settle.toFixed(2))
+        });
+
+        creditor.balance -= settle;
+        debtor.balance -= settle;
+
+        if (creditor.balance < 0.01) c++;
+        if (debtor.balance < 0.01) d++;
+      }
+
+      return plan;
+    }
+
+    function renderExpensesUI() {
+      const totalAmount = loadedExpenses.reduce((sum, item) => sum + item.amount, 0);
+      const expenseEl = document.getElementById('dashboardExpenses');
+      if (expenseEl) {
+        expenseEl.textContent = `$${totalAmount.toFixed(2)}`;
+      }
+
+      const plan = computeOptimalDebts();
+      const planArea = document.getElementById('debtPlanArea');
+      const featuredPlanArea = document.getElementById('featuredSettleUpArea');
+
+      if (!planArea || !featuredPlanArea) return;
+
+      const emptyStatePlan = `
+        <div class="bg-[#09090b] rounded-2xl p-6 border border-dashed border-[#1e1d21] text-center text-[#dfc290] font-semibold text-xs tracking-wider uppercase">
+          ✨ Perfect Balance! No outstanding dues.
+        </div>
+      `;
+
+      if (plan.length === 0) {
+        planArea.innerHTML = emptyStatePlan;
+        featuredPlanArea.innerHTML = `<div class="text-[#dfc290] text-xs tracking-wider uppercase font-bold">✨ Ledger Balanced</div>`;
+      } else {
+        let planHtml = '';
+        plan.forEach(tx => {
+          planHtml += `
+            <div class="flex items-center justify-between bg-[#09090b] rounded-2xl p-4 border border-[#1e1d21] shadow-inner">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#dfc290]/10 text-[#dfc290] font-bold text-xs flex items-center justify-center border border-[#dfc290]/20">
+                  ${tx.from[0]}
+                </div>
+                <span class="text-slate-300 text-xs font-semibold tracking-wide">
+                  <strong class="text-white">${tx.from}</strong> owes <strong class="text-white">${tx.to}</strong>
+                </span>
+              </div>
+              <span class="text-sm font-bold font-serif text-[#dfc290]">$${tx.amount}</span>
+            </div>
+          `;
+        });
+        planArea.innerHTML = planHtml;
+
+        let fHtml = '';
+        plan.slice(0, 3).forEach(tx => {
+          fHtml += `
+            <div class="flex items-center justify-between bg-[#09090b] rounded-xl p-3 border border-[#1e1d21] text-xs">
+              <span class="text-slate-300">
+                <strong class="text-white">${tx.from}</strong> owes <strong class="text-white">${tx.to}</strong>
+              </span>
+              <span class="font-bold text-[#dfc290]">$${tx.amount}</span>
+            </div>
+          `;
+        });
+        if (plan.length > 3) {
+          fHtml += `<p class="text-[10px] text-slate-500 text-center mt-1">Plus ${plan.length - 3} more transfers</p>`;
+        }
+        featuredPlanArea.innerHTML = fHtml;
+      }
+
+      const listArea = document.getElementById('expensesListArea');
+      if (loadedExpenses.length === 0) {
+        listArea.innerHTML = `<p class="text-slate-500 text-xs italic">No statements in this cycle.</p>`;
+      } else {
+        listArea.innerHTML = '';
+        loadedExpenses.forEach(exp => {
+          const row = document.createElement('div');
+          row.className = "bg-[#09090b] border border-[#1c1b21] rounded-2xl p-4.5 flex items-center justify-between gap-4";
+          row.innerHTML = `
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-semibold text-slate-100 text-xs tracking-wide truncate">${exp.description}</h4>
+                <span class="text-[9px] uppercase font-bold px-2 py-0.5 bg-[#18171a] border border-[#212025] text-[#dfc290] rounded-md">
+                  ${exp.date}
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1 font-medium">
+                Payer: <strong class="text-slate-300">${exp.paidBy}</strong> • Split: ${(exp.splitWith || []).join(", ")}
+              </p>
+            </div>
+            <div class="flex items-center gap-4 shrink-0">
+              <span class="text-sm font-bold font-serif text-[#dfc290]">$${parseFloat(exp.amount).toFixed(2)}</span>
+              <button onclick="deleteExpense('${exp.id}')" class="text-slate-500 hover:text-rose-400 transition" title="Dismiss">
+                🗑️
+              </button>
+            </div>
+          `;
+          listArea.appendChild(row);
+        });
+      }
+    }
+
+
+    // --- THE VAULT (JOKES) CONTROLLER ---
+    function renderJokesUI() {
+      const jokesCountEl = document.getElementById('dashboardJokes');
+      if (jokesCountEl) {
+        jokesCountEl.textContent = loadedJokes.length;
+      }
+
+      const grid = document.getElementById('jokesGrid');
+      if (!grid) return;
+
+      if (loadedJokes.length === 0) {
+        grid.innerHTML = `<p class="text-slate-500 text-xs italic col-span-2">The Vault remains silent. Record some comedy!</p>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      loadedJokes.forEach(j => {
+        const card = document.createElement('div');
+        card.className = "bg-[#111012] border border-[#1e1d21] rounded-[2rem] p-6 flex flex-col justify-between hover:border-[#dfc290]/20 transition-all duration-300 shadow-lg";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[9px] font-bold uppercase tracking-widest text-slate-500">Preserved by <strong class="text-slate-300 font-semibold">${j.author}</strong></span>
+              <button onclick="deleteJoke('${j.id}')" class="text-slate-500 hover:text-rose-400 transition">
+                🗑️
+              </button>
+            </div>
+            <p class="text-base md:text-lg font-serif italic text-white leading-relaxed">
+              "${j.text}"
+            </p>
+            <p class="text-[10px] text-[#dfc290] mt-3 bg-[#0a0a0d] border border-[#dfc290]/15 px-3 py-1.5 rounded-lg w-fit tracking-wide font-medium">
+              📌 ${j.context}
+            </p>
+          </div>
+          <div class="mt-5 pt-3 border-t border-[#1c1b21] flex items-center justify-between">
+            <span class="text-[9px] text-slate-500 font-semibold uppercase tracking-wider">${j.date}</span>
+            <button onclick="likeJoke('${j.id}', ${j.likes})" class="bg-[#dfc290]/5 hover:bg-[#dfc290]/10 text-[#dfc290] text-xs font-bold py-1.5 px-4 rounded-full border border-[#dfc290]/15 flex items-center gap-2 transition active:scale-95">
+              🔥 Echo ${j.likes}
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+
+    // --- SQUAD GOALS (BUCKET LIST) CONTROLLER ---
+    function renderGoalsUI() {
+      const completed = loadedGoals.filter(g => g.completed).length;
+      const goalsCountEl = document.getElementById('dashboardGoals');
+      if (goalsCountEl) {
+        goalsCountEl.textContent = `${completed}/${loadedGoals.length}`;
+      }
+
+      const listArea = document.getElementById('goalsListArea');
+      if (!listArea) return;
+
+      if (loadedGoals.length === 0) {
+        listArea.innerHTML = `<p class="text-slate-500 text-xs italic">A blank canvas awaits. Propose a hero milestone!</p>`;
+        return;
+      }
+
+      listArea.innerHTML = '';
+      loadedGoals.forEach(g => {
+        const item = document.createElement('div');
+        item.className = `flex items-center justify-between border rounded-[1.5rem] p-4.5 transition-all ${g.completed ? 'bg-emerald-500/[0.03] border-emerald-500/20' : 'bg-[#09090b] border-[#1e1d21]'}`;
+        item.innerHTML = `
+          <div class="flex items-center gap-4 flex-1 min-w-0">
+            <button onclick="toggleGoal('${g.id}', ${g.completed})" class="w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors shrink-0 ${g.completed ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400' : 'border-[#26242c] hover:border-slate-500'}">
+              ${g.completed ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>' : ''}
+            </button>
+            <div class="min-w-0">
+              <span class="text-xs font-bold tracking-wide transition-all block break-words ${g.completed ? 'text-slate-600 line-through' : 'text-slate-200'}">
+                ${g.text}
+              </span>
+              <span class="text-[9px] uppercase font-bold tracking-widest text-[#dfc290] bg-[#dfc290]/5 border border-[#dfc290]/10 px-2 py-0.5 rounded mt-1.5 inline-block">
+                ${g.category}
+              </span>
+            </div>
+          </div>
+          <button onclick="deleteGoal('${g.id}')" class="text-slate-500 hover:text-rose-400 transition ml-2 shrink-0">
+            🗑️
+          </button>
+        `;
+        listArea.appendChild(item);
+      });
+    }
+
+    // --- FORM ACTIONS (SAFE FOR LOCAL & CLOUD ENVIRONMENTS) ---
+
+    window.votePoll = async function(pollId, optionId) {
+      const poll = loadedPolls.find(p => p.id === pollId);
+      if (!poll) return;
+
+      const updatedOptions = poll.options.map(o => {
+        let currentVotes = Array.isArray(o.votes) ? o.votes : [];
+        currentVotes = currentVotes.filter(v => v !== currentUser);
+
+        if (o.id === optionId) {
+          const index = o.votes.indexOf(currentUser);
+          if (index > -1) {
+            // Toggle off
+          } else {
+            currentVotes.push(currentUser);
+          }
+        }
+        return {
+          ...o,
+          votes: currentVotes
+        };
+      });
+
+      // Write Locally immediately
+      poll.options = updatedOptions;
+      saveLocalCache();
+      renderPollsUI();
+
+      // Cloud Sync
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('polls', pollId).update({ options: updatedOptions });
+        }
+      } catch (err) {}
+    }
+
+    window.deletePoll = async function(pollId) {
+      loadedPolls = loadedPolls.filter(p => p.id !== pollId);
+      saveLocalCache();
+      renderPollsUI();
+      showToast("Poll removed.");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('polls', pollId).delete();
+        }
+      } catch (err) {}
+    }
+
+    window.deleteExpense = async function(id) {
+      loadedExpenses = loadedExpenses.filter(e => e.id !== id);
+      saveLocalCache();
+      renderExpensesUI();
+      showToast("Expense dismissed.");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('expenses', id).delete();
+        }
+      } catch (err) {}
+    }
+
+    window.likeJoke = async function(id, currentLikes) {
+      const joke = loadedJokes.find(j => j.id === id);
+      if (!joke) return;
+
+      joke.likes = (currentLikes || 0) + 1;
+      loadedJokes.sort((a, b) => b.likes - a.likes);
+      saveLocalCache();
+      renderJokesUI();
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('jokes', id).update({ likes: joke.likes });
+        }
+      } catch (err) {}
+    }
+
+    window.deleteJoke = async function(id) {
+      loadedJokes = loadedJokes.filter(j => j.id !== id);
+      saveLocalCache();
+      renderJokesUI();
+      showToast("Quote archived.");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('jokes', id).delete();
+        }
+      } catch (err) {}
+    }
+
+    window.toggleGoal = async function(id, status) {
+      const goal = loadedGoals.find(g => g.id === id);
+      if (!goal) return;
+
+      goal.completed = !status;
+      saveLocalCache();
+      renderGoalsUI();
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('goals', id).update({ completed: goal.completed });
+        }
+      } catch (err) {}
+    }
+
+    window.deleteGoal = async function(id) {
+      loadedGoals = loadedGoals.filter(g => g.id !== id);
+      saveLocalCache();
+      renderGoalsUI();
+      showToast("Goal dismissed.");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('goals', id).delete();
+        }
+      } catch (err) {}
+    }
+
+    // --- FORM LISTENERS ---
+
+    document.getElementById('createPollForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const questionInput = document.getElementById('pollQuestion');
+      const optionInputs = document.querySelectorAll('.poll-opt-input');
+      
+      const question = questionInput.value.trim();
+      const options = [];
+
+      optionInputs.forEach((inp, idx) => {
+        const val = inp.value.trim();
+        if (val) {
+          options.push({
+            id: `opt-${Date.now()}-${idx}`,
+            text: val,
+            votes: []
+          });
+        }
+      });
+
+      if (!question || options.length < 2) {
+        showToast("Please provide a question and at least 2 solutions.");
+        return;
+      }
+
+      const localId = `poll-${Date.now()}`;
+      const newPoll = {
+        id: localId,
+        question,
+        options,
+        creator: currentUser,
+        created: Date.now()
+      };
+
+      loadedPolls.unshift(newPoll);
+      saveLocalCache();
+      renderPollsUI();
+
+      questionInput.value = '';
+      const container = document.getElementById('pollOptionsContainer');
+      container.innerHTML = `
+        <input type="text" placeholder="Solution 1" required class="poll-opt-input w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-xs" />
+        <input type="text" placeholder="Solution 2" required class="poll-opt-input w-full bg-[#09090b] border border-[#1e1d21] rounded-xl px-3.5 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-[#dfc290] text-xs" />
+      `;
+      showToast("Poll launched! 📊");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('polls', localId).set(newPoll);
+        }
+      } catch (err) {}
+    });
+
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const desc = document.getElementById('expDesc').value.trim();
+      const amount = parseFloat(document.getElementById('expAmount').value);
+      const paidBy = document.getElementById('expPaidBy').value;
+      
+      const splitCheckboxes = document.querySelectorAll('#expenseSplitGroup input[type="checkbox"]:checked');
+      const splitWith = [];
+      splitCheckboxes.forEach(cb => splitWith.push(cb.value));
+
+      if (!desc || isNaN(amount) || amount <= 0 || splitWith.length === 0) {
+        showToast("Please fully complete details.");
+        return;
+      }
+
+      const localId = `exp-${Date.now()}`;
+      const newExp = {
+        id: localId,
+        description: desc,
+        amount,
+        paidBy,
+        splitWith,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      loadedExpenses.unshift(newExp);
+      saveLocalCache();
+      renderExpensesUI();
+
+      document.getElementById('expDesc').value = '';
+      document.getElementById('expAmount').value = '';
+      showToast("Ledger updated instantly! 💸");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('expenses', localId).set(newExp);
+        }
+      } catch (err) {}
+    });
+
+    document.getElementById('addJokeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const txt = document.getElementById('jokeText').value.trim();
+      const context = document.getElementById('jokeContext').value.trim();
+
+      if (!txt || !context) return;
+
+      const localId = `joke-${Date.now()}`;
+      const newJoke = {
+        id: localId,
+        text: txt,
+        context,
+        author: currentUser,
+        likes: 1,
+        date: new Date().toISOString().split('T')[0]
+      };
+
+      loadedJokes.unshift(newJoke);
+      saveLocalCache();
+      renderJokesUI();
+
+      document.getElementById('jokeText').value = '';
+      document.getElementById('jokeContext').value = '';
+      showToast("Deposited securely into the archives! 🎙️");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('jokes', localId).set(newJoke);
+        }
+      } catch (err) {}
+    });
+
+    document.getElementById('goalForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('goalText').value.trim();
+      const category = document.getElementById('goalCategory').value;
+
+      if (!text) return;
+
+      const localId = `goal-${Date.now()}`;
+      const newGoal = {
+        id: localId,
+        text,
+        category,
+        completed: false
+      };
+
+      loadedGoals.push(newGoal);
+      saveLocalCache();
+      renderGoalsUI();
+
+      document.getElementById('goalText').value = '';
+      showToast("Ambition published! 🎯");
+
+      try {
+        if (typeof db !== 'undefined' && db && auth && auth.currentUser) {
+          await getDocumentRef('goals', localId).set(newGoal);
+        }
+      } catch (err) {}
+    });
+
+
+    // --- CLOUD FIRESTORE LAYER ---
+
+    let db = null;
+    let auth = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'squadhub-default';
+
+    const getCollectionRef = (name) => db.collection('artifacts').doc(appId).collection('public').doc('data').collection(name);
+    const getDocumentRef = (collectionName, docId) => getCollectionRef(collectionName).doc(docId);
+
+    function setupRealtimeSync() {
+      if (!db || !auth.currentUser) return;
+
+      // Realtime Members Sync
+      getCollectionRef('members').onSnapshot((snapshot) => {
+        const list = [];
+        snapshot.forEach(doc => list.push(doc.data().name));
+        if (list.length === 0) {
+          members.forEach(async (m) => {
+            await getCollectionRef('members').doc(m).set({ name: m });
+          });
+        } else {
+          members = list;
+          saveLocalCache();
+          renderMembersUI();
+        }
+      }, () => {});
+
+      // Realtime Polls Sync
+      getCollectionRef('polls').onSnapshot((snapshot) => {
+        const list = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          data.id = doc.id;
+          list.push(data);
+        });
+        if (list.length > 0) {
+          loadedPolls = list;
+          saveLocalCache();
+          renderPollsUI();
+        }
+      }, () => {});
+
+      // Realtime Expenses Sync
+      getCollectionRef('expenses').onSnapshot((snapshot) => {
+        const list = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          data.id = doc.id;
+          list.push(data);
+        });
+        if (list.length > 0) {
+          loadedExpenses = list;
+          saveLocalCache();
+          renderExpensesUI();
+        }
+      }, () => {});
+
+      // Realtime Inside Jokes Sync
+      getCollectionRef('jokes').onSnapshot((snapshot) => {
+        const list = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          data.id = doc.id;
+          list.push(data);
+        });
+        list.sort((a, b) => b.likes - a.likes);
+        if (list.length > 0) {
+          loadedJokes = list;
+          saveLocalCache();
+          renderJokesUI();
+        }
+      }, () => {});
+
+      // Realtime Goals Sync
+      getCollectionRef('goals').onSnapshot((snapshot) => {
+        const list = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          data.id = doc.id;
+          list.push(data);
+        });
+        if (list.length > 0) {
+          loadedGoals = list;
+          saveLocalCache();
+          renderGoalsUI();
+        }
+      }, () => {});
+    }
+
+    // --- BOOTSTRAP WORKSPACE ---
+    window.addEventListener('DOMContentLoaded', () => {
+      loadLocalCache();
+      renderAllUI();
+
+      // Graceful background cloud loading
+      if (typeof firebase !== 'undefined') {
+        try {
+          const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyCrXckc6b-8iksAQOJDpVz_UA4-UwxV1_4", 
+                authDomain: "coterie-4.firebaseapp.com",
+                projectId: "coterie-4",
+                storageBucket: "coterie-4.firebasestorage.app",
+                messagingSenderId: "928764976054",
+                appId: "1:928764976054:web:988dc997030f59fef23f17"
+              };
+
+          firebase.initializeApp(firebaseConfig);
+          auth = firebase.auth();
+          db = firebase.firestore();
+
+          auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+              try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                  await auth.signInWithCustomToken(__initial_auth_token);
+                } else {
+                  await auth.signInAnonymously();
+                }
+              } catch (err) {
+                await auth.signInAnonymously();
+              }
+              return;
+            }
+            setupRealtimeSync();
+          });
+        } catch (e) {
+          console.log("Firebase background sync paused. Operating in local mode.");
+        }
+      }
+    });
+  </script>
+</body>
+</html>
